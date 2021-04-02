@@ -1,0 +1,68 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ "master|release|development"
+
+image: reg.deeproute.ai/deeproute-public/docker:19.03.12-bash
+services:
+  - reg.deeproute.ai/deeproute-public/docker:19.03.12-dind
+
+variables:
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
+  GIT_DEPTH: "1"
+  OS: "${CI_COMMIT_REF_NAME}"
+  DOCKER_URL: reg.deeproute.ai
+
+.only-default: &only-default
+  only:
+    - merge_requests
+    - pushes
+    - tags
+
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  tags:
+    - compilation
+  only:
+    - pushes
+  script: |
+    if [ "master" == "${CI_COMMIT_BRANCH}" ]; then
+      for env_value in $(compgen -v |grep '.*_PRODUCTION$'); do
+        eval export ${env_value%_PRODUCTION}="${!env_value}"
+      done
+      ENV="prod"
+    elif [[ "${CI_COMMIT_BRANCH}" == release*  ]]; then
+      for env_value in $(compgen -v |grep '.*_STAGING$'); do
+        eval export ${env_value%_STAGING}="${!env_value}"
+      done
+      ENV="qa"
+    elif [[ "${CI_COMMIT_BRANCH}" == uat*  ]]; then
+      for env_value in $(compgen -v |grep '.*_UAT$'); do
+        eval export ${env_value%_UAT}="${!env_value}"
+      done
+      ENV="uat"
+    else
+      for env_value in $(compgen -v |grep '.*_DEVELOPMENT$'); do
+        eval export ${env_value%_DEVELOPMENT}="${!env_value}"
+      done
+      ENV="dev"
+    fi
+
+    tag_build_num="0.0.${CI_PIPELINE_ID}"
+    export IMAGE="${DOCKER_URL}/${DOCKER_NAMESPACE}/${CI_PROJECT_NAME}:$tag_build_num"
+    export IMAGE_LATEST="${DOCKER_URL}/${DOCKER_NAMESPACE}/${CI_PROJECT_NAME}:latest"
+
+    # build the final image
+    docker build \
+      -t "$IMAGE" \
+      -t $IMAGE_LATEST \
+      --build-arg ENVIRONMENT=$ENV \
+      .
+
+    # upload to harbor
+    docker login -u "${DOCKER_USER}" -p "${DOCKER_PASSWORD}" "${DOCKER_URL}"
+    docker push "$IMAGE"
+    docker push "$IMAGE_LATEST"
