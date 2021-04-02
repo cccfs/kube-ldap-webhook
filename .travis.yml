@@ -1,0 +1,31 @@
+language: go
+go:
+  - 1.15.x
+os:
+  - linux
+services:
+  - docker
+
+before_deploy: |-
+  IMAGE=cccfs/kube-ldap-webhook:${TRAVIS_TAG}
+  docker build \
+  -t ${IMAGE}
+  .
+
+deploy:
+- provider: releases
+  token: $GITHUB_TOKEN
+  name: kube-ldap-webhook $TRAVIS_TAG
+  file: kube-ldap-webhook-$TRAVIS_OS_NAME
+  skip_cleanup: true
+  on:
+    repo: cccfs/kube-ldap-webhook
+    tags: true
+
+- provider: script
+  script: >-
+    docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+    && docker push ${IMAGE}
+  skip_cleanup: true
+  on:
+    branch: master
