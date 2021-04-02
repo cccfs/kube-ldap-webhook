@@ -6,8 +6,14 @@ os:
 services:
   - docker
 
+after_success:
+  -
 before_deploy: |-
-  IMAGE="cccfs/kube-ldap-webhook:$TRAVIS_TAG"
+  if [ "$TRAVIS_TAG" != "" ]; then
+    IMAGE="cccfs/kube-ldap-webhook:$TRAVIS_TAG"
+  else
+    IMAGE="cccfs/kube-ldap-webhook:dev"
+  fi
   docker build \
   -t $IMAGE \
   .
@@ -28,4 +34,4 @@ deploy:
     && docker push ${IMAGE}
   skip_cleanup: true
   on:
-    branch: master
+    tags: true
