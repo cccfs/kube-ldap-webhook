@@ -104,7 +104,7 @@ func authLDAP(token string) (*ldap.Conn, *Result, error) {
 
 	for _, entry := range srg.Entries {
 		r.Groups = entry.GetEqualFoldAttributeValues(os.Getenv("GROUP_NAME_ATTRIBUTE"))
-		//g := entry.GetAttributeValue(os.Getenv("GROUP_NAME_ATTRIBUTE")) //获取一个LDAP组
+		//g := entry.GetAttributeValue(os.Getenv("GROUP_NAME_ATTRIBUTE"))
 		//r.Groups = append(r.Groups, g)
 		log.Printf("Search group result: %v\n", r.Groups)
 	}
@@ -136,7 +136,7 @@ type Claims struct {
 }
 
 func generateToken(username string) (string, error) {
-	expiresTime, _ := time.ParseDuration(os.Getenv("TOKEN_EXPIRES_TIME")) //传入过期时间
+	expiresTime, _ := time.ParseDuration(os.Getenv("TOKEN_EXPIRES_TIME"))
 	claims := Claims{
 		User: username,
 		StandardClaims: jwt.StandardClaims{
@@ -147,6 +147,6 @@ func generateToken(username string) (string, error) {
 	}
 
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token, err := tokenClaims.SignedString([]byte(os.Getenv("APP_KEY")))//签署JWT的密钥
+	token, err := tokenClaims.SignedString([]byte(os.Getenv("APP_KEY")))
 	return token, err
 }
