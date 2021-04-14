@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/cccfs/kube-ldap-webhook.svg?branch=master)](https://travis-ci.com/cccfs/kube-ldap-webhook)  ![GitHub release (latest by date)](https://img.shields.io/github/v/release/cccfs/kube-ldap-webhook)
 # Kubernetes LDAP Webhook Authentication
 
 # Configuration
