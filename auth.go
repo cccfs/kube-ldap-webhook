@@ -82,7 +82,7 @@ func authLDAP(token string) (*ldap.Conn, *Result, error) {
 	if len(sru.Entries) != 1 {
 		return nil, nil, fmt.Errorf("user don't exist. %s", err)
 	}
-	r := &Result{} //实例化结构体
+	r := &Result{} 
 	for _, entry := range sru.Entries {
 		r.Dn = entry.DN
 		r.Name = entry.GetAttributeValue(os.Getenv("USER_NAME_ATTRIBUTE"))
